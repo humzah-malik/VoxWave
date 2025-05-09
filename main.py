@@ -8,7 +8,15 @@ import threading
 import speech_recognition as sr
 import rumps
 import urllib.error
-#from rumps import mainthread
+import spotipy
+from spotipy.oauth2 import SpotifyOAuth
+
+sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
+    client_id="f8f7d5f92d924d28b15832cc32d69557",
+    client_secret="4195eeff05614d929e6881dcf1855353",
+    redirect_uri="http://127.0.0.1:8888/callback",
+    scope="user-read-playback-state user-modify-playback-state"
+))
 
 # Sounds
 def ding():
@@ -16,6 +24,36 @@ def ding():
 
 def beep():
     subprocess.Popen(['afplay', '/System/Library/Sounds/Pop.aiff'])
+
+def increase_brightness():
+    os.system("osascript -e 'tell application \"System Events\" to key code 144'")  # F2
+
+def decrease_brightness():
+    os.system("osascript -e 'tell application \"System Events\" to key code 145'")  # F1
+
+def increase_volume():
+    os.system("osascript -e 'set volume output volume (output volume of (get volume settings) + 5)'")
+
+def decrease_volume():
+    os.system("osascript -e 'set volume output volume (output volume of (get volume settings) - 5)'")
+
+def play_track(track_name):
+    devices = sp.devices().get('devices', [])
+    if not devices:
+        print("No active Spotify device found.")
+        os.system("say 'No active Spotify device. Open Spotify and play a song.'")
+        return
+
+    results = sp.search(q=track_name, type='track', limit=1)
+    tracks = results.get('tracks', {}).get('items', [])
+    if tracks:
+        track_uri = tracks[0]['uri']
+        sp.start_playback(device_id=devices[0]['id'], uris=[track_uri])
+        print(f"Playing: {tracks[0]['name']} by {tracks[0]['artists'][0]['name']}")
+        os.system(f"say 'Playing {tracks[0]['name']}'")
+    else:
+        print("Track not found.")
+        os.system("say 'Track not found on Spotify'")
 
 # Menubar badge
 app = rumps.App("✋")
@@ -48,29 +86,44 @@ def execute_voice_command(cmd: str):
     elif "volume" in cmd:
         gesture_mode = "volume"
         print("→ Mode: Volume")
+    elif "brightness" in cmd:
+        gesture_mode = "brightness"
+        print("→ Mode: Brightness")
     elif "spotify" in cmd:
-        if "play" in cmd or "pause" in cmd:
-            os.system("osascript -e 'tell application \"Spotify\" to playpause'")
+        if "play" in cmd:
+            song = cmd.split("play", 1)[1].strip()
+            if not song:
+                os.system("say 'Please say the song name after play'")
+                return
+            play_track(song)
+        elif "pause" in cmd:
+            os.system("osascript -e 'tell application \"Spotify\" to pause'")
+            os.system("say 'Paused'")
+        elif "resume" in cmd:
+            os.system("osascript -e 'tell application \"Spotify\" to play'")
+            os.system("say 'Resumed'")
         elif "next" in cmd and "track" in cmd:
             os.system("osascript -e 'tell application \"Spotify\" to next track'")
+            os.system("say 'Next track'")
         elif "previous" in cmd and "track" in cmd:
             os.system("osascript -e 'tell application \"Spotify\" to previous track'")
             time.sleep(0.1)
             os.system("osascript -e 'tell application \"Spotify\" to previous track'")
-    elif "chrome" in cmd and ("play" in cmd or "pause" in cmd):
-        os.system('osascript -e \'tell application "Google Chrome" to activate\'')
-        os.system('osascript -e \'tell application "System Events" to keystroke " " \'')
-    elif "mute" in cmd:
-        os.system("osascript -e 'set volume output muted true'")
-    elif "unmute" in cmd:
-        os.system("osascript -e 'set volume output muted false'")
+            os.system("say 'Previous track'")
+        else:
+            os.system("say 'Please say Spotify play followed by a song name'")
+        
+    elif "off" in cmd:
+        gesture_mode = "off"
+        print("→ Mode: Off")
+        subprocess.Popen(["afplay", "/System/Library/Sounds/Submarine.aiff"])
 
 def voice_command_listener():
     recognizer = sr.Recognizer()
     mic = sr.Microphone()
     with mic as source:
         recognizer.adjust_for_ambient_noise(source)
-    print("🔊 Voice assistant ready")
+    print("Voice assistant ready")
     while True:
         with mic as source:
             audio = recognizer.listen(source, phrase_time_limit=3)
@@ -92,9 +145,8 @@ def gesture_worker():
     hands = mp_hands.Hands(max_num_hands=2,
                            min_detection_confidence=0.4,
                            min_tracking_confidence=0.7)
-    cap = cv2.VideoCapture(0)
-
-    # Config
+    
+    cap = None  # initialize as None
     scroll_amount = 2
     scroll_interval = 0.15
     volume_step = 5
@@ -106,9 +158,26 @@ def gesture_worker():
     last_badge = ""
 
     while True:
+        #  OFF MODE: release webcam and skip frame 
+        if gesture_mode == "off":
+            if cap:
+                cap.release()
+                cap = None
+            badge_txt = "Off"
+            if badge_txt != last_badge:
+                set_badge(badge_txt)
+                last_badge = badge_txt
+            time.sleep(0.1)
+            continue
+
+        #  ON MODE: reinitialize webcam if needed
+        if not cap:
+            cap = cv2.VideoCapture(0)
+
         success, frame = cap.read()
         if not success:
-            break
+            continue
+
         frame = cv2.flip(frame, 1)
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         res = hands.process(rgb)
@@ -121,16 +190,14 @@ def gesture_worker():
                 if (current_gesture in (None, 'vol_up') and is_index_only(lm) and
                         now - last_volume_time >= volume_interval):
                     beep()
-                    os.system(f"osascript -e 'set volume output volume "
-                              f"(output volume of (get volume settings) + {volume_step})'")
+                    increase_volume()
                     current_gesture = 'vol_up'
                     last_volume_time = now
 
                 elif (current_gesture in (None, 'vol_down') and is_index_and_middle(lm) and
                         now - last_volume_time >= volume_interval):
                     beep()
-                    os.system(f"osascript -e 'set volume output volume "
-                              f"(output volume of (get volume settings) - {volume_step})'")
+                    decrease_volume()
                     current_gesture = 'vol_down'
                     last_volume_time = now
 
@@ -153,13 +220,31 @@ def gesture_worker():
                 elif current_gesture in ('scroll_down', 'scroll_up') and not (is_index_only(lm) or is_index_and_middle(lm)):
                     current_gesture = None
 
+            elif gesture_mode == "brightness":
+                if (current_gesture in (None, 'bright_up') and is_index_only(lm) and
+                        now - last_volume_time >= volume_interval):
+                    beep()
+                    increase_brightness()
+                    current_gesture = 'bright_up'
+                    last_volume_time = now
+
+                elif (current_gesture in (None, 'bright_down') and is_index_and_middle(lm) and
+                        now - last_volume_time >= volume_interval):
+                    beep()
+                    decrease_brightness()
+                    current_gesture = 'bright_down'
+                    last_volume_time = now
+
+                elif current_gesture in ('bright_up', 'bright_down') and not (is_index_only(lm) or is_index_and_middle(lm)):
+                    current_gesture = None
+
         # Mode switch sound
         if gesture_mode != last_mode:
             ding()
             last_mode = gesture_mode
 
         # Badge update
-        badge_txt = "Vol" if gesture_mode == "volume" else "Scroll" if gesture_mode == "scrolling" else ""
+        badge_txt = "Vol" if gesture_mode == "volume" else "Scroll" if gesture_mode == "scrolling" else "Bright" if gesture_mode == "brightness" else ""
         if badge_txt != last_badge:
             set_badge(badge_txt)
             last_badge = badge_txt
@@ -167,7 +252,8 @@ def gesture_worker():
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
-    cap.release()
+    if cap:
+        cap.release()
     cv2.destroyAllWindows()
 
 # Main
