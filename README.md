@@ -3,7 +3,7 @@
 A macOS desktop assistant that combines **hand gestures** and **voice commands** to control system functions, Spotify playback, and Chrome tabs.  
 Built using `Python`, `MediaPipe`, `SpeechRecognition`, and `rumps`.  
 
-This is an experimental personal project designed to explore multimodal (gesture + voice) control on macOS.
+This is an experimental personal project designed to explore multimodal control on macOS.
 
 ---
 
@@ -36,7 +36,7 @@ This is an experimental personal project designed to explore multimodal (gesture
 
 ## 📝 Installation
 
-### 1️⃣ Clone the repository
+## Clone the repository
 git clone https://github.com/humzah-malik/macGesture.git
 cd hand-gesture-voice-assistant
 
@@ -49,21 +49,20 @@ pip install -r requirements.txt
 
 ## Usage Instructions
 Gesture Modes
-Use the voice command to activate a mode:
 
-"scrolling" -> scrolling mode
-"volume" -> volume mode
-"brightness" -> brightness mode
+Use the voice command to activate a mode:
+"scrolling" -> scrolling mode; 
+"volume" -> volume mode; 
+"brightness" -> brightness mode; 
 "off" -> stop webcam tracking
 
 In each mode, perform gestures:
-Gesture	                     | Action
-Index finger up              | Volume up / Scroll down / Brightness up
-Index + middle finger up	 | Volume down / Scroll up / Brightness down
+Index finger up -> Volume up / Scroll down / Brightness up; 
+Index + middle finger up -> Volume down / Scroll up / Brightness down
 
 ## Voice Commands
 General
-"quit/exit (app)" -> fully close the app
+"quit/exit (app)" -> fully close the app; 
 "off" -> stop camera tracking but keeps assistant active
 
 ## Spotify Commands
