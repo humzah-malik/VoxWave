@@ -287,10 +287,10 @@ def execute_voice_command(cmd: str):
     cmd = cmd.lower().strip()
 
     global quit_app
-    if cmd in ("quit", "quit app", "exit app"):
+    if cmd in ("quit", "quit app", "exit", "exit app"):
         os.system("say 'Shutting down. Goodbye.'")
         quit_app = True
-        sys.exit(0)
+        os._exit(0)
 
     # 0) Gesture Modes FIRST — always accessible
     if "scrolling" in cmd:
