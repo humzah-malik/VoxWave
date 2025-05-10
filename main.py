@@ -262,7 +262,7 @@ def safe_spotify_call(func, *args, **kwargs):
         return None
 
 # Menubar badge
-app = rumps.App("✋")
+app = rumps.App("🖐️ VoxWave")
 
 def set_badge(text=""):
     app.title = text
@@ -489,7 +489,7 @@ def gesture_worker():
     last_volume_time = time.time()
     current_gesture = None
     last_mode = None
-    last_badge = ""
+    last_badge = app.title
 
     while not quit_app:
         #  OFF MODE: release webcam and skip frame 
@@ -578,7 +578,12 @@ def gesture_worker():
             last_mode = gesture_mode
 
         # Badge update
-        badge_txt = "Vol" if gesture_mode == "volume" else "Scroll" if gesture_mode == "scrolling" else "Bright" if gesture_mode == "brightness" else""
+        badge_txt = {
+            "volume":   "Vol",
+            "scrolling":"Scroll",
+            "brightness":"Bright"
+        }.get(gesture_mode, app.name)
+
         if badge_txt != last_badge:
             set_badge(badge_txt)
             last_badge = badge_txt

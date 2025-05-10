@@ -1,4 +1,4 @@
-# 🖐️ Hand Gesture + Voice Command macOS Assistant
+# 🖐️ VoxWave
 
 A macOS desktop assistant that combines **hand gestures** and **voice commands** to control system functions, Spotify playback, and Chrome tabs.  
 Built using `Python`, `MediaPipe`, `SpeechRecognition`, and `rumps`.  
