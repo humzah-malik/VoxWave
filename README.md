@@ -47,6 +47,8 @@ source venv/bin/activate
 ## Install dependencies
 pip install -r requirements.txt
 
+---
+
 ## Usage Instructions
 Gesture Modes
 
@@ -60,10 +62,14 @@ In each mode, perform gestures:
 Index finger up -> Volume up / Scroll down / Brightness up; 
 Index + middle finger up -> Volume down / Scroll up / Brightness down
 
+---
+
 ## Voice Commands
 General
 "quit/exit (app)" -> fully close the app; 
 "off" -> stop camera tracking but keeps assistant active
+
+---
 
 ## Spotify Commands
 You can fully control Spotify by voice.The app connects via your logged-in Spotify account using Spotipy.
@@ -90,11 +96,15 @@ Notes:
 - Voice feedback is provided if disambiguation is needed.
 - Spotify must be open and playing once for device detection.
 
+---
+
 ## Chrome Commands
 - "Chrome play" / "Chrome pause" -> play/pause YouTube or Spotify Web
 - "Chrome new tab" -> open new tab
 - "Chrome close tab" -> close current tab
 - "Chrome next tab" / "Chrome previous tab" -> switch tabs
+
+---
 
 ## Future Improvements (Wishlist)
 - Add customizable gesture recognition
