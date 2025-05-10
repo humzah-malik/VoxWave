@@ -59,8 +59,8 @@ Use the voice command to activate a mode:
 "off" -> stop webcam tracking
 
 In each mode, perform gestures:
-Index finger up -> Volume up / Scroll down / Brightness up; 
-Index + middle finger up -> Volume down / Scroll up / Brightness down
+Index finger up (hold) -> Volume up / Scroll down / Brightness up; 
+Index + middle finger up (hold)-> Volume down / Scroll up / Brightness down
 
 ---
 
